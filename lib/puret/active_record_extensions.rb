@@ -26,7 +26,7 @@ module Puret
             puret_attributes[I18n.locale][attribute] = value
           end
 
-          # attribute getter
+	  # attribute getter
           define_method attribute do
             # return previously setted attributes if present
             return puret_attributes[I18n.locale][attribute] if puret_attributes[I18n.locale][attribute]
@@ -42,6 +42,29 @@ module Puret
 
             translation ? translation[attribute] : nil
           end
+
+	  I18n.available_locales.each do |locale|
+	    localized_attribute = "#{locale}_#{attribute}"
+	    # attribute setter for locale
+	    define_method "#{localized_attribute}=" do |value|
+	      current_locale = I18n.locale
+	      I18n.locale = locale
+	      return_value = send("#{attribute}=", value)
+	      I18n.locale = current_locale
+	      return return_value
+	    end
+
+	    # attribute getter for locale
+            define_method localized_attribute do
+	      current_locale = I18n.locale
+	      I18n.locale = locale
+	      return_value = send(attribute)
+	      I18n.locale = current_locale
+	      return return_value
+            end
+	  end
+
+
         end
       end
 
