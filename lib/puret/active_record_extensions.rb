@@ -47,21 +47,25 @@ module Puret
 	    localized_attribute = "#{locale}_#{attribute}"
 	    # attribute setter for locale
 	    define_method "#{localized_attribute}=" do |value|
-	      current_locale = I18n.locale
-	      I18n.locale = locale
-	      return_value = send("#{attribute}=", value)
-	      I18n.locale = current_locale
-	      return return_value
+	      puret_attributes[locale][attribute] = value
 	    end
 
 	    # attribute getter for locale
             define_method localized_attribute do
-	      current_locale = I18n.locale
-	      I18n.locale = locale
-	      return_value = send(attribute)
-	      I18n.locale = current_locale
-	      return return_value
-            end
+              # return previously setted attributes if present
+              return puret_attributes[locale][attribute] if puret_attributes[locale][attribute]
+              return if new_record?
+
+              # Lookup chain:
+              # if translation not present in current locale,
+              # use default locale, if present.
+              # Otherwise use first translation
+              translation = translations.detect { |t| t.locale.to_sym == locale } ||
+                translations.detect { |t| t.locale.to_sym == puret_default_locale } ||
+                translations.first
+
+              translation ? translation[attribute] : nil
+	    end
 	  end
 
 
